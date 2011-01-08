@@ -1,88 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="NeoIO" default="default" xmlns="antlib:org.apache.tools.ant" xmlns:ivy="antlib:org.apache.ivy.ant">
-
-	<property name="dir.ant.build" location="build/" />
-	<property name="dir.build.src" location="${dir.ant.build}/src" />
-	<property name="dir.build.test" location="${dir.ant.build}/test" />
-	<property name="dir.build.dist" location="${dir.ant.build}/dist" />
-	<property name="dir.build.report" location="${dir.ant.build}/dist" />
+<project name="NeoIO" default="dist" xmlns="antlib:org.apache.tools.ant" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property name="dir.build" location="build/" />
+	<property name="dir.build.src" location="${dir.build}/bin/src" />
+	<property name="dir.build.test" location="${dir.build}/bin/test" />
+	<property name="dir.build.dist" location="${dir.build}/dist" />
+	<property name="dir.build.report.cobertura" location="${dir.build}/dist/cobertura" />
+	<property name="dir.build.report.junit" location="${dir.build}/dist/junit" />
 	<property name="build.number" value="1"/>
 	
-	<target name="init">
+	<target name="init" unless="init.ran">
 		<mkdir dir="${dir.build.src}"/>
 		<mkdir dir="${dir.build.test}"/>
 		<mkdir dir="${dir.build.dist}"/>
-		<mkdir dir="${dir.build.report}"/>
+		<mkdir dir="${dir.build.report.cobertura}"/>
+		<mkdir dir="${dir.build.report.junit}"/>
+		<property name="init.ran" value="true" />
 	</target>
 	
-	<target name="compile.src.debug">
-		<ivy:resolve conf="default"/>
-		<ivy:cachepath pathid="cp.ivy" conf="default"/>
-		<javac srcdir="./src" destdir="${dir.build.src}" classpathref="cp.ivy" debug="true"/>
-	</target>
-	<target name="compile.src">
-		<ivy:resolve conf="default"/>
-		<ivy:cachepath pathid="cp.ivy" conf="default"/>
-		<javac srcdir="./src" destdir="${dir.build.src}" classpathref="cp.ivy" debug="false" source="1.6" target="1.6"/>
-	</target>
-	<target name="test">
-		<ivy:resolve conf="default,test"/>
-		<ivy:cachepath pathid="cp.ivy" conf="default,test"/>
-		<path id="cp.test">
-			<path refid="cp.ivy"/>
-			<fileset dir="${dir.build.dist}">
-				<include name="${ant.project.name}-${build.number}${ivy.artifact}.jar"/>
-			</fileset>
-		</path>
-		<javac srcdir="./test" destdir="${dir.build.test}" classpathref="cp.test" debug="false" source="1.6" target="1.6"/>
-		<junit fork="false" haltonfailure="false" printsummary="true">
-			<formatter type="xml" usefile="true"/>
-			<classpath refid="cp.test"/>
-			<classpath location="${dir.build.test}"/>
-			<batchtest todir="${dir.build.report}">
-				<fileset dir="${dir.build.test}">
-					<include name="**/Test*.class"/>
-					<exclude name="**/Test*$*.class"/>
-				</fileset>
-			</batchtest>
-		</junit>
+	<target name="ivy-resolve-compile" unless="">
+		<ivy:resolve conf="compile"/>
+		<ivy:cachepath pathid="cp.ivy" conf="compile"/>
 	</target>
 	
-	<target name="jar">
-		<jar destfile="${dir.build.dist}/${ant.project.name}-${build.number}${ivy.artifact}.jar" basedir="${dir.build.src}"/>
+	<target name="build-debug" depends="init, ivy-resolve-compile" description="build the jar with debug symbols">
+		
 	</target>
-	<target name="src">
-		<zip destfile="${dir.build.dist}/${ant.project.name}-${build.number}.src.zip" basedir="./src"/>
-	</target>
-	<target name="publish">
-		<ivy:resolve conf="master"/>
-		<ivy:resolve conf="debug"/>
-		<ivy:resolve conf="sources"/>
-		<ivy:publish resolver="shared" pubrevision="${build.number}" forcedeliver="true" publishivy="true" overwrite="true">
-			<artifacts pattern="${dir.build.dist}/[artifact]-${build.number}.[ext]"/>
-		</ivy:publish>
+	<target name="build-clean" depends="init, ivy-resolve-compile" description="build the jar without debug symbols">
+		
 	</target>
 	
-    <target name="default" description="description">
-    	<antcall target="clean"/>
-        <antcall target="init"/>
-    	<antcall target="compile.src.debug"/>
-    	<antcall target="jar">
-    		<param name="ivy.artifact" value=".dbg"/>
-    	</antcall>
-    	<antcall target="compile.src"/>
-    	<antcall target="jar">
-    		<param name="ivy.artifact" value=""/>
-    	</antcall>
-    	<antcall target="test">
-    		<param name="ivy.artifact" value=".dbg"/>
-		</antcall>
-    	<antcall target="src" />
-    	<antcall target="publish"/>
+    <target name="dist" description="build the full distribution with javadoc, cobertura report, junit test results, and jars">
+    	
     </target>
 	
 	<target name="clean">
-		<delete dir="${dir.ant.build}"/>
+		<delete dir="${dir.build}"/>
 	</target>
 
 </project>
